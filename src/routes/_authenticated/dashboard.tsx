@@ -37,7 +37,7 @@ function Dashboard() {
   async function remove(id: string) {
     if (!confirm("حذف الامتحان ونتائجه نهائيًا؟")) return;
     const { error } = await supabase.from("exams").delete().eq("id", id);
-    if (error) return toast.error("تعذر الحذف");
+    if (error) { toast.error("تعذر الحذف"); return; }
     toast.success("تم الحذف");
     qc.invalidateQueries({ queryKey: ["exams"] });
   }

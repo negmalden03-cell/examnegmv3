@@ -31,8 +31,8 @@ const selectCls =
 function NewExam() {
   const navigate = useNavigate();
   const gen = useServerFn(generateExam);
-  const [grade, setGrade] = useState(GRADES[0]);
-  const [term, setTerm] = useState(TERMS[0]);
+  const [grade, setGrade] = useState(GRADES[0]!);
+  const [term, setTerm] = useState(TERMS[0]!);
   const [branches, setBranches] = useState<string[]>(["القراءة", "النصوص", "النحو", "التعبير"]);
   const [difficulty, setDifficulty] = useState("متوسط");
   const [marks, setMarks] = useState(40);
@@ -54,7 +54,7 @@ function NewExam() {
   }
 
   async function runAI() {
-    if (!branches.length) return toast.error("اختر فرعًا واحدًا على الأقل");
+    if (!branches.length) { toast.error("اختر فرعًا واحدًا على الأقل"); return; }
     setBusy("ai");
     try {
       const r = await gen({ data: { grade, term, branches, difficulty, totalMarks: marks, duration, notes } });
