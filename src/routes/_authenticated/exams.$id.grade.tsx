@@ -89,14 +89,14 @@ function GradePage() {
   }
 
   async function save() {
-    if (!student.trim()) return toast.error("اكتب اسم الطالب");
-    if (!Object.keys(grades).length) return toast.error("صحّح الإجابات أولًا");
+    if (!student.trim()) { toast.error("اكتب اسم الطالب"); return; }
+    if (!Object.keys(grades).length) { toast.error("صحّح الإجابات أولًا"); return; }
     setBusy("save");
     const { error } = await supabase.from("results").insert({
       exam_id: id, student_name: student.trim(), class_name: cls || null, answers, grading: grades as any, score,
     });
     setBusy(null);
-    if (error) return toast.error("تعذر الحفظ");
+    if (error) { toast.error("تعذر الحفظ"); return; }
     toast.success(`تم حفظ نتيجة ${student}`);
     setStudent(""); setAnswers({}); setGrades({});
     qc.invalidateQueries({ queryKey: ["results", id] });

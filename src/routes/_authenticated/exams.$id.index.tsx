@@ -82,7 +82,7 @@ function ExamPage() {
       .update({ title, duration_minutes: duration, sections: sections as any, total_marks: totalMarks(sections), updated_at: new Date().toISOString() })
       .eq("id", id);
     setSaving(false);
-    if (error) return toast.error("تعذر الحفظ");
+    if (error) { toast.error("تعذر الحفظ"); return; }
     setDirty(false);
     toast.success("تم حفظ الامتحان");
     qc.invalidateQueries({ queryKey: ["exams"] });
@@ -153,7 +153,7 @@ function ExamPage() {
 
           <Button
             variant="outline"
-            onClick={() => update((ss) => [...ss, { id: uid(), branch: BRANCHES[0], title: `السؤال ${ordinals[ss.length] ?? ss.length + 1}`, questions: [] }])}
+            onClick={() => update((ss) => [...ss, { id: uid(), branch: BRANCHES[0]!, title: `السؤال ${ordinals[ss.length] ?? ss.length + 1}`, questions: [] }])}
           >
             <Plus className="size-4" /> إضافة قسم
           </Button>

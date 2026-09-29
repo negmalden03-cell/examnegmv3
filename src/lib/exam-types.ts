@@ -4,7 +4,7 @@ export type Question = {
   id: string;
   type: QuestionType;
   text: string;
-  options?: string[];
+  options?: string[] | undefined;
   answer: string;
   marks: number;
 };
@@ -13,7 +13,7 @@ export type Section = {
   id: string;
   branch: string;
   title: string;
-  passage?: string;
+  passage?: string | undefined;
   questions: Question[];
 };
 
@@ -47,7 +47,7 @@ export function normalizeSections(raw: unknown): Section[] {
 }
 
 export function normalizeQuestion(q: any): Question {
-  const type: QuestionType = ["mcq", "tf", "short", "essay"].includes(q?.type) ? q.type : "short";
+  const type: QuestionType = (["mcq", "tf", "short", "essay"] as string[]).includes(String(q?.type)) ? q.type : "short";
   return {
     id: q?.id || uid(),
     type,
