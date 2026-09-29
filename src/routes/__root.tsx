@@ -77,12 +77,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "منصة امتحانات اللغة العربية" },
+      { title: "منصة نجم للامتحانات" },
       {
         name: "description",
         content: "منصة متخصصة لإنشاء وإدارة امتحانات اللغة العربية للمرحلة الإعدادية في مصر.",
       },
-      { property: "og:title", content: "منصة امتحانات اللغة العربية" },
+      { property: "og:title", content: "منصة نجم للامتحانات" },
       {
         property: "og:description",
         content: "أنشئ امتحانات اللغة العربية للصفوف الإعدادية بالذكاء الاصطناعي.",

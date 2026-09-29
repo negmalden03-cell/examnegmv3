@@ -14,7 +14,7 @@ import heroImage from "@/assets/hero-arabic-exams.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "منصة امتحانات اللغة العربية | إنشاء الامتحانات بالذكاء الاصطناعي" },
+      { title: "منصة نجم للامتحانات | إنشاء الامتحانات بالذكاء الاصطناعي" },
       {
         name: "description",
         content:
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/")({
       },
       {
         property: "og:title",
-        content: "منصة امتحانات اللغة العربية | إنشاء الامتحانات بالذكاء الاصطناعي",
+        content: "منصة نجم للامتحانات | إنشاء الامتحانات بالذكاء الاصطناعي",
       },
       {
         property: "og:description",
@@ -74,7 +74,7 @@ function Index() {
               <Sparkles className="size-4.5" />
             </span>
             <span className="font-display text-base font-bold text-ink">
-              منصة امتحانات اللغة العربية
+              منصة نجم للامتحانات
             </span>
           </div>
           <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
@@ -238,7 +238,7 @@ function Index() {
 
       <footer className="border-t border-border bg-card/60">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row">
-          <span className="font-display font-bold text-ink">منصة امتحانات اللغة العربية</span>
+          <span className="font-display font-bold text-ink">منصة نجم للامتحانات</span>
           <span>للمعلمين في مصر · المرحلة الإعدادية</span>
         </div>
       </footer>
