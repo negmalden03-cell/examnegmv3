@@ -13,8 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 import { Route as AuthenticatedExamsNewRouteImport } from './routes/_authenticated/exams.new'
 import { Route as AuthenticatedExamsIdIndexRouteImport } from './routes/_authenticated/exams.$id.index'
+import { Route as AuthenticatedExamsIdGradeRouteImport } from './routes/_authenticated/exams.$id.grade'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,6 +37,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedExamsNewRoute = AuthenticatedExamsNewRouteImport.update({
   id: '/exams/new',
   path: '/exams/new',
@@ -46,19 +53,29 @@ const AuthenticatedExamsIdIndexRoute =
     path: '/exams/$id/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedExamsIdGradeRoute =
+  AuthenticatedExamsIdGradeRouteImport.update({
+    id: '/exams/$id/grade',
+    path: '/exams/$id/grade',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/results': typeof AuthenticatedResultsRoute
   '/exams/new': typeof AuthenticatedExamsNewRoute
+  '/exams/$id/grade': typeof AuthenticatedExamsIdGradeRoute
   '/exams/$id/': typeof AuthenticatedExamsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/results': typeof AuthenticatedResultsRoute
   '/exams/new': typeof AuthenticatedExamsNewRoute
+  '/exams/$id/grade': typeof AuthenticatedExamsIdGradeRoute
   '/exams/$id': typeof AuthenticatedExamsIdIndexRoute
 }
 export interface FileRoutesById {
@@ -67,21 +84,39 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/results': typeof AuthenticatedResultsRoute
   '/_authenticated/exams/new': typeof AuthenticatedExamsNewRoute
+  '/_authenticated/exams/$id/grade': typeof AuthenticatedExamsIdGradeRoute
   '/_authenticated/exams/$id/': typeof AuthenticatedExamsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/exams/new' | '/exams/$id/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/results'
+    | '/exams/new'
+    | '/exams/$id/grade'
+    | '/exams/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/exams/new' | '/exams/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/results'
+    | '/exams/new'
+    | '/exams/$id/grade'
+    | '/exams/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
+    | '/_authenticated/results'
     | '/_authenticated/exams/new'
+    | '/_authenticated/exams/$id/grade'
     | '/_authenticated/exams/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -121,6 +156,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/results': {
+      id: '/_authenticated/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof AuthenticatedResultsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/exams/new': {
       id: '/_authenticated/exams/new'
       path: '/exams/new'
@@ -135,18 +177,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExamsIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/exams/$id/grade': {
+      id: '/_authenticated/exams/$id/grade'
+      path: '/exams/$id/grade'
+      fullPath: '/exams/$id/grade'
+      preLoaderRoute: typeof AuthenticatedExamsIdGradeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
   AuthenticatedExamsNewRoute: typeof AuthenticatedExamsNewRoute
+  AuthenticatedExamsIdGradeRoute: typeof AuthenticatedExamsIdGradeRoute
   AuthenticatedExamsIdIndexRoute: typeof AuthenticatedExamsIdIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedResultsRoute: AuthenticatedResultsRoute,
   AuthenticatedExamsNewRoute: AuthenticatedExamsNewRoute,
+  AuthenticatedExamsIdGradeRoute: AuthenticatedExamsIdGradeRoute,
   AuthenticatedExamsIdIndexRoute: AuthenticatedExamsIdIndexRoute,
 }
 
