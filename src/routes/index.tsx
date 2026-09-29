@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Sparkles,
   FileText,
@@ -88,13 +88,13 @@ function Index() {
               المحتوى
             </a>
           </nav>
-          <a
-            href="#features"
+          <Link
+            to="/dashboard"
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-soft transition-colors hover:bg-ink"
           >
             ابدأ الآن
             <ArrowLeft className="size-4" />
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -115,13 +115,13 @@ function Index() {
               امتحان كاملة، وصحّح الإجابات المقالية، وتابع مستوى طلابك من مكان واحد.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a
-                href="#how"
+              <Link
+                to="/exams/new"
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-ink px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lift transition-transform hover:-translate-y-0.5"
               >
                 أنشئ امتحانك الأول
                 <ArrowLeft className="size-4" />
-              </a>
+              </Link>
               <a
                 href="#features"
                 className="inline-flex items-center rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-ink transition-colors hover:bg-secondary"
