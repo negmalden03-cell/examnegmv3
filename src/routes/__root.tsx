@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -77,12 +78,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "منصة امتحانات اللغة العربية" },
+      { title: "منصة نجم للامتحانات" },
       {
         name: "description",
         content: "منصة متخصصة لإنشاء وإدارة امتحانات اللغة العربية للمرحلة الإعدادية في مصر.",
       },
-      { property: "og:title", content: "منصة امتحانات اللغة العربية" },
+      { property: "og:title", content: "منصة نجم للامتحانات" },
       {
         property: "og:description",
         content: "أنشئ امتحانات اللغة العربية للصفوف الإعدادية بالذكاء الاصطناعي.",
@@ -132,6 +133,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster position="top-center" richColors />
     </QueryClientProvider>
   );
 }
