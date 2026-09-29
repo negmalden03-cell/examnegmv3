@@ -14,7 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      exams: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          grade: string
+          id: string
+          sections: Json
+          status: string
+          term: string | null
+          title: string
+          total_marks: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          grade: string
+          id?: string
+          sections?: Json
+          status?: string
+          term?: string | null
+          title: string
+          total_marks?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          grade?: string
+          id?: string
+          sections?: Json
+          status?: string
+          term?: string | null
+          title?: string
+          total_marks?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      results: {
+        Row: {
+          answers: Json
+          class_name: string | null
+          created_at: string
+          exam_id: string
+          grading: Json
+          id: string
+          score: number
+          student_name: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          class_name?: string | null
+          created_at?: string
+          exam_id: string
+          grading?: Json
+          id?: string
+          score?: number
+          student_name: string
+          user_id?: string
+        }
+        Update: {
+          answers?: Json
+          class_name?: string | null
+          created_at?: string
+          exam_id?: string
+          grading?: Json
+          id?: string
+          score?: number
+          student_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "results_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
