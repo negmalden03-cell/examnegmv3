@@ -59,4 +59,4 @@ export function normalizeQuestion(q: any): Question {
 }
 
 export const toArabicDigits = (n: number | string) =>
-  String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
+  String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)] ?? d);
