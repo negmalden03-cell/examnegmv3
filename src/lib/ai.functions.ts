@@ -48,20 +48,34 @@ export const generateExam = createServerFn({ method: "POST" })
         totalMarks: z.number().min(5).max(200),
         duration: z.number(),
         notes: z.string().max(4000).optional(),
+        spec: z.string().max(8000).optional(),
+        sourceIds: z.array(z.string().uuid()).max(10).optional(),
       })
       .parse(d),
   )
-  .handler(async ({ data }) => {
-    const out = await callAI(`أنشئ امتحانًا كاملًا في اللغة العربية.
+  .handler(async ({ data, context }) => {
+    let refs = "";
+    if (data.sourceIds?.length) {
+      const { data: srcs } = await context.supabase.from("sources").select("title,kind,extracted_text").in("id", data.sourceIds);
+      const per = Math.floor(24000 / Math.max(1, srcs?.length ?? 1));
+      refs = (srcs ?? [])
+        .filter((s) => s.extracted_text)
+        .map((s) => `--- مصدر: ${s.title} (${s.kind === "exam" ? "امتحان سابق" : s.kind === "book" ? "كتاب مدرسي" : "مصدر"}) ---\n${String(s.extracted_text).slice(0, per)}`)
+        .join("\n\n");
+    }
+    const { callResponsesJSON } = await import("./ai-responses.server");
+    const out = await callResponsesJSON(SYSTEM, [{ type: "input_text", text: `أنشئ امتحانًا كاملًا في اللغة العربية.
 الصف: ${data.grade} — ${data.term}
 الفروع المطلوبة: ${data.branches.join("، ")}
 مستوى الصعوبة: ${data.difficulty}
 الدرجة الكلية: ${data.totalMarks} (يجب أن يساوي مجموع درجات الأسئلة هذه الدرجة تمامًا)
 زمن الامتحان: ${data.duration} دقيقة
 ${data.notes ? `ملاحظات المعلم / الدروس المقررة:\n${data.notes}` : ""}
+${data.spec ? `مواصفات الورقة الامتحانية المطلوبة (التزم بهيكلها وعدد أسئلتها وتوزيع درجاتها بدقة، ويمكن أن تتجاوز الفروع المختارة إن نصت المواصفات على ذلك):\n${data.spec}` : ""}
+${refs ? `اعتمد في بناء الأسئلة والقطع والنصوص على المصادر التالية التي رفعها المعلم، وحاكِ أسلوب الامتحانات السابقة إن وُجدت:\n${refs}` : ""}
 اجعل لكل فرع قسمًا مستقلًا. لأقسام القراءة والنصوص ضع قطعة أو أبياتًا في passage وأسئلة عليها. نوّع أنواع الأسئلة وتدرّج في المستويات المعرفية.
 أعد: {"title": "عنوان الامتحان", "sections": [{"branch": "اسم الفرع", "title": "عنوان السؤال مثل: السؤال الأول (القراءة)", "passage": "اختياري", "questions": [...]}]}
-${QUESTION_SHAPE}`);
+${QUESTION_SHAPE}` }]);
     return { title: String(out.title ?? `امتحان اللغة العربية — ${data.grade}`), sections: out.sections ?? [] };
   });
 
@@ -108,7 +122,14 @@ export const gradeAnswers = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data }) => aiGradeItems(data.grade, data.items));
+
+export async function aiGradeItems(
+  grade: string,
+  items: { id: string; type: string; text: string; passage?: string | undefined; modelAnswer: string; marks: number; studentAnswer: string }[],
+) {
+  const data = { grade, items };
+  {
     if (!data.items.length) return { grades: {} as Record<string, { score: number; feedback: string }> };
     const out = await callAI(`صحّح إجابات طالب في ${data.grade}. قيّم كل إجابة مقارنة بالإجابة النموذجية بعدل، وامنح درجات جزئية عند الصواب الجزئي، وراعِ سلامة اللغة والإملاء في التعبير.
 الأسئلة:
@@ -121,7 +142,8 @@ ${JSON.stringify(data.items)}
       grades[it.id] = { score, feedback: String(g?.feedback ?? "") };
     }
     return { grades };
-  });
+  }
+}
 
 export const analyzeResults = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -148,5 +170,69 @@ export const analyzeResults = createServerFn({ method: "POST" })
       weaknesses: arr(out.weaknesses),
       recommendations: arr(out.recommendations),
       attention: arr(out.attention),
+    };
+  });
+
+export const extractSource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase;
+    const { data: src, error } = await sb.from("sources").select("*").eq("id", data.id).single();
+    if (error || !src) throw new Error("المصدر غير موجود");
+    try {
+      const { data: blob, error: dErr } = await sb.storage.from("sources").download(src.file_path);
+      if (dErr || !blob) throw new Error("تعذر قراءة الملف");
+      const b64 = Buffer.from(await blob.arrayBuffer()).toString("base64");
+      const { callResponsesJSON, fileToPart } = await import("./ai-responses.server");
+      const out = await callResponsesJSON(SYSTEM, [
+        {
+          type: "input_text",
+          text: `هذا ${src.kind === "exam" ? "امتحان سابق مصوّر" : src.kind === "book" ? "كتاب/درس مدرسي" : "مصدر تعليمي"} للغة العربية — ${src.grade}.
+استخرج محتواه نصًا عربيًا دقيقًا (القطع، الأبيات، القواعد، الأسئلة وتوزيع درجاتها إن وُجدت). إن كان طويلًا فلخّص الدروس بحيث تبقى الأمثلة والنصوص الأساسية، بحد أقصى نحو ١٥٠٠٠ حرف.
+أعد: {"text": "المحتوى المستخرج"}`,
+        },
+        fileToPart(src.mime ?? "application/pdf", src.file_name ?? "file.pdf", b64),
+      ]);
+      const text = String(out.text ?? "").slice(0, 60000);
+      await sb.from("sources").update({ extracted_text: text, status: text ? "ready" : "failed" }).eq("id", src.id);
+      return { ok: !!text };
+    } catch (e: any) {
+      await sb.from("sources").update({ status: "failed" }).eq("id", src.id);
+      throw new Error(e?.message ?? "تعذر قراءة الملف");
+    }
+  });
+
+export const analyzeSpec = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        text: z.string().max(8000).optional(),
+        file: z.object({ mime: z.string(), name: z.string(), base64: z.string().max(14_000_000) }).optional(),
+        grade: z.string(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    if (!data.text?.trim() && !data.file) throw new Error("اكتب المواصفات أو ارفع ملفًا");
+    const { callResponsesJSON, fileToPart } = await import("./ai-responses.server");
+    const parts: any[] = [
+      {
+        type: "input_text",
+        text: `حلّل مواصفات الورقة الامتحانية (أو نموذج الامتحان) المرفقة للغة العربية — ${data.grade}.
+${data.text ? `نص المواصفات من المعلم:\n${data.text}` : ""}
+استخرج الهيكل بدقة: عدد الأسئلة، الفرع لكل سؤال، أنواع البنود وعددها، درجة كل جزء، الدرجة الكلية، الزمن.
+أعد: {"summary": "وصف مختصر للهيكل", "spec": "مواصفات تفصيلية مرتبة سؤالًا سؤالًا لتُستخدم في توليد ورقة مماثلة", "totalMarks": رقم أو null, "duration": رقم بالدقائق أو null, "branches": ["الفروع"]}`,
+      },
+    ];
+    if (data.file) parts.push(fileToPart(data.file.mime, data.file.name, data.file.base64));
+    const out = await callResponsesJSON(SYSTEM, parts);
+    return {
+      summary: String(out.summary ?? ""),
+      spec: String(out.spec ?? ""),
+      totalMarks: Number(out.totalMarks) || null,
+      duration: Number(out.duration) || null,
+      branches: Array.isArray(out.branches) ? out.branches.map(String) : [],
     };
   });
