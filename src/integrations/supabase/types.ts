@@ -16,11 +16,15 @@ export type Database = {
     Tables: {
       exams: {
         Row: {
+          accepting_responses: boolean
           created_at: string
           duration_minutes: number
           grade: string
           id: string
           sections: Json
+          share_code: string | null
+          source_ids: string[]
+          spec_text: string | null
           status: string
           term: string | null
           title: string
@@ -29,11 +33,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accepting_responses?: boolean
           created_at?: string
           duration_minutes?: number
           grade: string
           id?: string
           sections?: Json
+          share_code?: string | null
+          source_ids?: string[]
+          spec_text?: string | null
           status?: string
           term?: string | null
           title: string
@@ -42,11 +50,15 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          accepting_responses?: boolean
           created_at?: string
           duration_minutes?: number
           grade?: string
           id?: string
           sections?: Json
+          share_code?: string | null
+          source_ids?: string[]
+          spec_text?: string | null
           status?: string
           term?: string | null
           title?: string
@@ -66,6 +78,7 @@ export type Database = {
           id: string
           score: number
           student_name: string
+          submitted_by: string
           user_id: string
         }
         Insert: {
@@ -77,6 +90,7 @@ export type Database = {
           id?: string
           score?: number
           student_name: string
+          submitted_by?: string
           user_id?: string
         }
         Update: {
@@ -88,6 +102,7 @@ export type Database = {
           id?: string
           score?: number
           student_name?: string
+          submitted_by?: string
           user_id?: string
         }
         Relationships: [
@@ -99,6 +114,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sources: {
+        Row: {
+          created_at: string
+          extracted_text: string | null
+          file_name: string | null
+          file_path: string
+          grade: string
+          id: string
+          kind: string
+          mime: string | null
+          status: string
+          term: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          extracted_text?: string | null
+          file_name?: string | null
+          file_path: string
+          grade: string
+          id?: string
+          kind?: string
+          mime?: string | null
+          status?: string
+          term?: string | null
+          title: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          extracted_text?: string | null
+          file_name?: string | null
+          file_path?: string
+          grade?: string
+          id?: string
+          kind?: string
+          mime?: string | null
+          status?: string
+          term?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
