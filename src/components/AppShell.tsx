@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const nav = [
   { to: "/dashboard", label: "امتحاناتي", icon: LayoutDashboard },
+  { to: "/sources", label: "المصادر", icon: BookOpen },
   { to: "/exams/new", label: "امتحان جديد", icon: FilePlus2 },
   { to: "/results", label: "النتائج والتحليل", icon: BarChart3 },
 ] as const;

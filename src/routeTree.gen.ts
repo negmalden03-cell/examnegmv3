@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
+import { Route as AuthenticatedSourcesRouteImport } from './routes/_authenticated/sources'
 import { Route as AuthenticatedExamsNewRouteImport } from './routes/_authenticated/exams.new'
 import { Route as AuthenticatedExamsIdIndexRouteImport } from './routes/_authenticated/exams.$id.index'
 import { Route as AuthenticatedExamsIdGradeRouteImport } from './routes/_authenticated/exams.$id.grade'
@@ -42,6 +43,11 @@ const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
   path: '/results',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSourcesRoute = AuthenticatedSourcesRouteImport.update({
+  id: '/sources',
+  path: '/sources',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedExamsNewRoute = AuthenticatedExamsNewRouteImport.update({
   id: '/exams/new',
   path: '/exams/new',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/results': typeof AuthenticatedResultsRoute
+  '/sources': typeof AuthenticatedSourcesRoute
   '/exams/new': typeof AuthenticatedExamsNewRoute
   '/exams/$id/grade': typeof AuthenticatedExamsIdGradeRoute
   '/exams/$id/': typeof AuthenticatedExamsIdIndexRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/results': typeof AuthenticatedResultsRoute
+  '/sources': typeof AuthenticatedSourcesRoute
   '/exams/new': typeof AuthenticatedExamsNewRoute
   '/exams/$id/grade': typeof AuthenticatedExamsIdGradeRoute
   '/exams/$id': typeof AuthenticatedExamsIdIndexRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/results': typeof AuthenticatedResultsRoute
+  '/_authenticated/sources': typeof AuthenticatedSourcesRoute
   '/_authenticated/exams/new': typeof AuthenticatedExamsNewRoute
   '/_authenticated/exams/$id/grade': typeof AuthenticatedExamsIdGradeRoute
   '/_authenticated/exams/$id/': typeof AuthenticatedExamsIdIndexRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/results'
+    | '/sources'
     | '/exams/new'
     | '/exams/$id/grade'
     | '/exams/$id/'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/results'
+    | '/sources'
     | '/exams/new'
     | '/exams/$id/grade'
     | '/exams/$id'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/dashboard'
     | '/_authenticated/results'
+    | '/_authenticated/sources'
     | '/_authenticated/exams/new'
     | '/_authenticated/exams/$id/grade'
     | '/_authenticated/exams/$id/'
@@ -163,6 +175,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedResultsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sources': {
+      id: '/_authenticated/sources'
+      path: '/sources'
+      fullPath: '/sources'
+      preLoaderRoute: typeof AuthenticatedSourcesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/exams/new': {
       id: '/_authenticated/exams/new'
       path: '/exams/new'
@@ -190,6 +209,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
+  AuthenticatedSourcesRoute: typeof AuthenticatedSourcesRoute
   AuthenticatedExamsNewRoute: typeof AuthenticatedExamsNewRoute
   AuthenticatedExamsIdGradeRoute: typeof AuthenticatedExamsIdGradeRoute
   AuthenticatedExamsIdIndexRoute: typeof AuthenticatedExamsIdIndexRoute
@@ -198,6 +218,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedResultsRoute: AuthenticatedResultsRoute,
+  AuthenticatedSourcesRoute: AuthenticatedSourcesRoute,
   AuthenticatedExamsNewRoute: AuthenticatedExamsNewRoute,
   AuthenticatedExamsIdGradeRoute: AuthenticatedExamsIdGradeRoute,
   AuthenticatedExamsIdIndexRoute: AuthenticatedExamsIdIndexRoute,
