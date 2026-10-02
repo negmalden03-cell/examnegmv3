@@ -93,9 +93,9 @@ function NewExam() {
       const r = await gen({
         data: {
           grade, term,
-          branches: tab === "spec" && specResult?.branches.length ? specResult.branches : branches,
+          branches,
           difficulty, totalMarks: specResult?.totalMarks ?? marks, duration: specResult?.duration ?? duration,
-          notes, spec: tab === "spec" ? specResult?.spec : undefined,
+          notes, spec: specResult?.spec || undefined,
           sourceIds: sourceIds.length ? sourceIds : undefined,
         },
       });
@@ -151,7 +151,7 @@ function NewExam() {
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="font-display text-2xl font-bold text-ink">امتحان جديد</h1>
-      <p className="mt-1 text-sm text-muted-foreground">حدّد المواصفات يدويًا أو ارفع ورقة المواصفات، ثم ولّد الامتحان ونموذج الإجابة بالذكاء الاصطناعي.</p>
+      <p className="mt-1 text-sm text-muted-foreground">الامتحان الناتج يصلح للطباعة الورقية وللإجابة الإلكترونية برابط أو كود للطالب. حدّد المواصفات يدويًا أو ارفع ورقة المواصفات، ثم ولّد الامتحان ونموذج الإجابة بالذكاء الاصطناعي.</p>
 
       <div className="mt-6 flex gap-2 rounded-xl border border-border bg-card p-1">
         <button

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Loader2, Plus, Printer, Save, Trash2, Wand2, ClipboardCheck, Eye, Pencil } from "lucide-react";
+import { Share2, Copy, Loader2, Plus, Printer, Save, Trash2, Wand2, ClipboardCheck, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateQuestions } from "@/lib/ai.functions";
@@ -36,6 +36,67 @@ export const Route = createFileRoute("/_authenticated/exams/$id/")({
   }),
   component: ExamPage,
 });
+
+function PublishButton({ id, code, accepting, onChange }: { id: string; code: string | null; accepting: boolean; onChange: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const link = code && typeof window !== "undefined" ? `${window.location.origin}/take/${code}` : "";
+  async function publish(on: boolean) {
+    setBusy(true);
+    try {
+      let c = code;
+      for (let i = 0; !c && i < 5; i++) {
+        const cand = `NJM-${Math.floor(1000 + Math.random() * 9000)}`;
+        const { error } = await supabase.from("exams").update({ share_code: cand, accepting_responses: on }).eq("id", id);
+        if (!error) c = cand;
+      }
+      if (!c) throw new Error();
+      if (code) {
+        const { error } = await supabase.from("exams").update({ accepting_responses: on }).eq("id", id);
+        if (error) throw error;
+      }
+      toast.success(on ? "الامتحان متاح للطلاب الآن" : "تم إيقاف استقبال الإجابات");
+      onChange();
+    } catch {
+      toast.error("تعذر تحديث النشر");
+    } finally {
+      setBusy(false);
+    }
+  }
+  const copy = (t: string) => { navigator.clipboard.writeText(t); toast.success("تم النسخ"); };
+  return (
+    <div className="relative">
+      <Button variant="outline" onClick={() => setOpen((v) => !v)}>
+        <Share2 className="size-4" /> نشر للطلاب{accepting ? " ●" : ""}
+      </Button>
+      {open && (
+        <div className="absolute end-0 z-20 mt-2 w-80 rounded-xl border border-border bg-card p-4 shadow-lift">
+          {code && accepting ? (
+            <>
+              <p className="text-sm text-muted-foreground">كود الامتحان</p>
+              <button onClick={() => copy(code)} className="mt-1 flex w-full items-center justify-between rounded-lg bg-secondary px-3 py-2 font-mono text-lg font-bold text-ink" dir="ltr">
+                {code} <Copy className="size-4" />
+              </button>
+              <p className="mt-3 text-sm text-muted-foreground">رابط الطالب</p>
+              <button onClick={() => copy(link)} className="mt-1 flex w-full items-center justify-between gap-2 rounded-lg bg-secondary px-3 py-2 text-xs text-ink" dir="ltr">
+                <span className="truncate">{link}</span> <Copy className="size-4 shrink-0" />
+              </button>
+              <p className="mt-3 text-xs text-muted-foreground">الإجابات تُصحح تلقائيًا وتظهر في «تصحيح الطلاب» و«النتائج». احفظ تعديلاتك قبل النشر.</p>
+              <Button variant="outline" className="mt-3 w-full" disabled={busy} onClick={() => publish(false)}>إيقاف استقبال الإجابات</Button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-ink">انشر الامتحان ليجيب عليه الطلاب إلكترونيًا بكود أو رابط بدون حساب.</p>
+              <Button className="mt-3 w-full" disabled={busy} onClick={() => publish(true)}>
+                {busy && <Loader2 className="size-4 animate-spin" />} {code ? "إعادة فتح الاستقبال" : "إنشاء كود ورابط"}
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const ordinals = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر"];
 
@@ -114,6 +175,7 @@ function ExamPage() {
               <Printer className="size-4" /> طباعة
             </Button>
           )}
+          <PublishButton id={id} code={exam.share_code} accepting={exam.accepting_responses} onChange={() => qc.invalidateQueries({ queryKey: ["exam", id] })} />
           <Button variant="outline" asChild>
             <Link to="/exams/$id/grade" params={{ id }}>
               <ClipboardCheck className="size-4" /> تصحيح الطلاب
@@ -313,7 +375,8 @@ function ExamPaper({
               <span>{s.title}</span>
               <span className="text-sm">({toArabicDigits(sm)} درجة)</span>
             </h2>
-            {s.passage && <p className="mt-3 whitespace-pre-wrap rounded-lg border border-border bg-secondary/50 p-4 leading-loose">{s.passage}</p>}
+            {s.passage && s.branch === "الاستماع" && !showAnswers && <p className="mt-3 text-sm text-muted-foreground">(يستمع الطالب إلى النص ثم يجيب)</p>}
+            {s.passage && (s.branch !== "الاستماع" || showAnswers) && <p className="mt-3 whitespace-pre-wrap rounded-lg border border-border bg-secondary/50 p-4 leading-loose">{s.passage}</p>}
             <ol className="mt-3 space-y-4">
               {s.questions.map((q, i) => (
                 <li key={q.id} className="leading-loose">
