@@ -5,8 +5,9 @@ import { useRef, useState } from "react";
 import { BookOpen, FileText, Image as ImageIcon, Loader2, Trash2, Upload, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { extractSource } from "@/lib/ai.functions";
-import { GRADES, TERMS, uid } from "@/lib/exam-types";
+import { readImagesText } from "@/lib/ai.functions";
+import { readFileText, safeStorageName } from "@/lib/source-reader";
+import { GRADES, TERMS } from "@/lib/exam-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,12 +35,11 @@ const KINDS = [
   { v: "other", label: "أخرى" },
 ];
 const kindLabel = (k: string) => KINDS.find((x) => x.v === k)?.label ?? k;
-const isWord = (mime: string, name: string) =>
-  mime.includes("word") || /\.docx?$/i.test(name);
 
 function SourcesPage() {
   const qc = useQueryClient();
-  const extract = useServerFn(extractSource);
+  const readImages = useServerFn(readImagesText);
+  const [progress, setProgress] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -60,13 +60,15 @@ function SourcesPage() {
 
   async function upload() {
     if (!file) { toast.error("اختر ملفًا أولًا"); return; }
-    if (file.size > 20 * 1024 * 1024) { toast.error("الحد الأقصى ٢٠ ميجابايت"); return; }
+    if (file.size > 200 * 1024 * 1024) { toast.error("الحد الأقصى ٢٠٠ ميجابايت"); return; }
     setBusy(true);
+    let rowId: string | null = null;
     try {
+      setProgress("جارٍ رفع الملف وحفظه...");
       const { data: u } = await supabase.auth.getUser();
-      const path = `${u.user!.id}/${uid()}-${file.name}`;
-      const { error: upErr } = await supabase.storage.from("sources").upload(path, file);
-      if (upErr) throw upErr;
+      const path = `${u.user!.id}/${safeStorageName(file.name)}`;
+      const { error: upErr } = await supabase.storage.from("sources").upload(path, file, { contentType: file.type || undefined });
+      if (upErr) throw new Error("تعذر رفع الملف: " + upErr.message);
       const { data: row, error: insErr } = await supabase
         .from("sources")
         .insert({
@@ -77,27 +79,23 @@ function SourcesPage() {
         })
         .select("id")
         .single();
-      if (insErr) throw insErr;
-
-      if (isWord(file.type, file.name)) {
-        // Word: استخراج النص في المتصفح
-        const mammoth = await import("mammoth");
-        const buf = await file.arrayBuffer();
-        const { value } = await mammoth.extractRawText({ arrayBuffer: buf });
-        await supabase.from("sources").update({ extracted_text: value.slice(0, 60000), status: value.trim() ? "ready" : "failed" }).eq("id", row.id);
-      } else {
-        // PDF / صورة: يقرأها الذكاء الاصطناعي
-        extract({ data: { id: row.id } })
-          .then(() => qc.invalidateQueries({ queryKey: ["sources"] }))
-          .catch(() => qc.invalidateQueries({ queryKey: ["sources"] }));
-      }
-      toast.success("تم رفع المصدر" + (isWord(file.type, file.name) ? "" : "، وجارٍ قراءته بالذكاء الاصطناعي"));
-      setOpen(false); setFile(null); setTitle("");
+      if (insErr) throw new Error("تعذر حفظ المصدر: " + insErr.message);
+      rowId = row.id;
       qc.invalidateQueries({ queryKey: ["sources"] });
+      const text = await readFileText(
+        file,
+        async (images) => (await readImages({ data: { images } })).text,
+        setProgress,
+      );
+      await supabase.from("sources").update({ extracted_text: text.slice(0, 300000), status: text.trim() ? "ready" : "failed" }).eq("id", row.id);
+      toast.success(text.trim() ? "تم حفظ المصدر وقراءته، وأصبح جاهزًا للذكاء الاصطناعي" : "تم حفظ الملف لكن تعذرت قراءة نصه");
+      setOpen(false); setFile(null); setTitle("");
     } catch (e: any) {
+      if (rowId) await supabase.from("sources").update({ status: "failed" }).eq("id", rowId);
       toast.error(e?.message ?? "تعذر رفع الملف");
     } finally {
-      setBusy(false);
+      setBusy(false); setProgress("");
+      qc.invalidateQueries({ queryKey: ["sources"] });
     }
   }
 
@@ -157,7 +155,7 @@ function SourcesPage() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>الملف (PDF أو Word أو صورة — حتى ٢٠ ميجابايت)</Label>
+            <Label>الملف (PDF أو Word أو صورة — حتى ٢٠٠ ميجابايت)</Label>
             <input
               ref={fileRef}
               type="file"
@@ -175,7 +173,7 @@ function SourcesPage() {
           </div>
           <Button onClick={upload} disabled={busy} className="bg-gradient-ink">
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-            {busy ? "جارٍ الرفع..." : "رفع المصدر"}
+            {busy ? progress || "جارٍ الرفع..." : "رفع المصدر وحفظه"}
           </Button>
         </div>
       )}
