@@ -67,7 +67,7 @@ function SourcesPage() {
       setProgress("جارٍ رفع الملف وحفظه...");
       const { data: u } = await supabase.auth.getUser();
       const path = `${u.user!.id}/${safeStorageName(file.name)}`;
-      const { error: upErr } = await supabase.storage.from("sources").upload(path, file, { contentType: file.type || undefined });
+      const { error: upErr } = await supabase.storage.from("sources").upload(path, file, { contentType: file.type || "application/octet-stream" });
       if (upErr) throw new Error("تعذر رفع الملف: " + upErr.message);
       const { data: row, error: insErr } = await supabase
         .from("sources")
