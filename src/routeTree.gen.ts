@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 import { Route as AuthenticatedSourcesRouteImport } from './routes/_authenticated/sources'
+import { Route as TakeIndexRouteImport } from './routes/take.index'
 import { Route as AuthenticatedExamsNewRouteImport } from './routes/_authenticated/exams.new'
 import { Route as AuthenticatedExamsIdIndexRouteImport } from './routes/_authenticated/exams.$id.index'
 import { Route as AuthenticatedExamsIdGradeRouteImport } from './routes/_authenticated/exams.$id.grade'
@@ -48,6 +49,11 @@ const AuthenticatedSourcesRoute = AuthenticatedSourcesRouteImport.update({
   path: '/sources',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const TakeIndexRoute = TakeIndexRouteImport.update({
+  id: '/take/',
+  path: '/take/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedExamsNewRoute = AuthenticatedExamsNewRouteImport.update({
   id: '/exams/new',
   path: '/exams/new',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/results': typeof AuthenticatedResultsRoute
   '/sources': typeof AuthenticatedSourcesRoute
+  '/take/': typeof TakeIndexRoute
   '/exams/new': typeof AuthenticatedExamsNewRoute
   '/exams/$id/grade': typeof AuthenticatedExamsIdGradeRoute
   '/exams/$id/': typeof AuthenticatedExamsIdIndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/results': typeof AuthenticatedResultsRoute
   '/sources': typeof AuthenticatedSourcesRoute
+  '/take': typeof TakeIndexRoute
   '/exams/new': typeof AuthenticatedExamsNewRoute
   '/exams/$id/grade': typeof AuthenticatedExamsIdGradeRoute
   '/exams/$id': typeof AuthenticatedExamsIdIndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/results': typeof AuthenticatedResultsRoute
   '/_authenticated/sources': typeof AuthenticatedSourcesRoute
+  '/take/': typeof TakeIndexRoute
   '/_authenticated/exams/new': typeof AuthenticatedExamsNewRoute
   '/_authenticated/exams/$id/grade': typeof AuthenticatedExamsIdGradeRoute
   '/_authenticated/exams/$id/': typeof AuthenticatedExamsIdIndexRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/results'
     | '/sources'
+    | '/take/'
     | '/exams/new'
     | '/exams/$id/grade'
     | '/exams/$id/'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/results'
     | '/sources'
+    | '/take'
     | '/exams/new'
     | '/exams/$id/grade'
     | '/exams/$id'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/results'
     | '/_authenticated/sources'
+    | '/take/'
     | '/_authenticated/exams/new'
     | '/_authenticated/exams/$id/grade'
     | '/_authenticated/exams/$id/'
@@ -136,6 +148,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  TakeIndexRoute: typeof TakeIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -181,6 +194,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sources'
       preLoaderRoute: typeof AuthenticatedSourcesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/take/': {
+      id: '/take/'
+      path: '/take'
+      fullPath: '/take/'
+      preLoaderRoute: typeof TakeIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/exams/new': {
       id: '/_authenticated/exams/new'
@@ -231,6 +251,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  TakeIndexRoute: TakeIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
