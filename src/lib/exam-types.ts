@@ -21,7 +21,7 @@ export type QuestionGrade = { score: number; feedback: string };
 
 export const GRADES = ["الصف الأول الإعدادي", "الصف الثاني الإعدادي", "الصف الثالث الإعدادي"];
 export const TERMS = ["الفصل الدراسي الأول", "الفصل الدراسي الثاني"];
-export const BRANCHES = ["القراءة", "النصوص", "النحو", "البلاغة", "التعبير", "الإملاء", "القصة"];
+export const BRANCHES = ["القراءة", "النصوص", "النحو", "البلاغة", "التعبير", "الإملاء", "القصة", "الاستماع", "الخط"];
 export const TYPE_LABELS: Record<QuestionType, string> = {
   mcq: "اختيار من متعدد",
   tf: "صواب وخطأ",

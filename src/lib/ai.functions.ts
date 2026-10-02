@@ -57,7 +57,7 @@ export const generateExam = createServerFn({ method: "POST" })
     let refs = "";
     if (data.sourceIds?.length) {
       const { data: srcs } = await context.supabase.from("sources").select("title,kind,extracted_text").in("id", data.sourceIds);
-      const per = Math.floor(24000 / Math.max(1, srcs?.length ?? 1));
+      const per = Math.floor(60000 / Math.max(1, srcs?.length ?? 1));
       refs = (srcs ?? [])
         .filter((s) => s.extracted_text)
         .map((s) => `--- مصدر: ${s.title} (${s.kind === "exam" ? "امتحان سابق" : s.kind === "book" ? "كتاب مدرسي" : "مصدر"}) ---\n${String(s.extracted_text).slice(0, per)}`)
@@ -73,7 +73,9 @@ export const generateExam = createServerFn({ method: "POST" })
 ${data.notes ? `ملاحظات المعلم / الدروس المقررة:\n${data.notes}` : ""}
 ${data.spec ? `مواصفات الورقة الامتحانية المطلوبة (التزم بهيكلها وعدد أسئلتها وتوزيع درجاتها بدقة، ويمكن أن تتجاوز الفروع المختارة إن نصت المواصفات على ذلك):\n${data.spec}` : ""}
 ${refs ? `اعتمد في بناء الأسئلة والقطع والنصوص على المصادر التالية التي رفعها المعلم، وحاكِ أسلوب الامتحانات السابقة إن وُجدت:\n${refs}` : ""}
-اجعل لكل فرع قسمًا مستقلًا. لأقسام القراءة والنصوص ضع قطعة أو أبياتًا في passage وأسئلة عليها. نوّع أنواع الأسئلة وتدرّج في المستويات المعرفية.
+اجعل لكل فرع قسمًا مستقلًا.
+إن وُجد فرع «الاستماع»: ضع في passage نص استماع قصيرًا (٨٠–١٥٠ كلمة) يُقرأ على الطلاب صوتيًا، والأسئلة عليه تفهم المسموع (اختيار، صواب وخطأ، إجابة قصيرة).
+إن وُجد فرع «الخط»: ضع في passage عبارة أو بيتًا مضبوطًا بالشكل، واجعل السؤال من نوع essay يطلب كتابتها بخط النسخ أو الرقعة، والإجابة النموذجية هي العبارة نفسها. لأقسام القراءة والنصوص ضع قطعة أو أبياتًا في passage وأسئلة عليها. نوّع أنواع الأسئلة وتدرّج في المستويات المعرفية.
 أعد: {"title": "عنوان الامتحان", "sections": [{"branch": "اسم الفرع", "title": "عنوان السؤال مثل: السؤال الأول (القراءة)", "passage": "اختياري", "questions": [...]}]}
 ${QUESTION_SHAPE}` }]);
     return { title: String(out.title ?? `امتحان اللغة العربية — ${data.grade}`), sections: out.sections ?? [] };
@@ -201,6 +203,20 @@ export const extractSource = createServerFn({ method: "POST" })
       await sb.from("sources").update({ status: "failed" }).eq("id", src.id);
       throw new Error(e?.message ?? "تعذر قراءة الملف");
     }
+  });
+
+export const readImagesText = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ images: z.array(z.object({ mime: z.string(), base64: z.string().max(4_000_000) })).min(1).max(6) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const { callResponsesJSON } = await import("./ai-responses.server");
+    const out = await callResponsesJSON(SYSTEM, [
+      { type: "input_text", text: `هذه صفحات مصوّرة من كتاب أو امتحان للغة العربية. انسخ نصها العربي كاملًا بدقة وبالترتيب (القطع، الأبيات، القواعد، الأسئلة والدرجات). أعد: {"text": "النص"}` },
+      ...data.images.map((im) => ({ type: "input_image" as const, image_url: `data:${im.mime};base64,${im.base64}` })),
+    ]);
+    return { text: String(out.text ?? "") };
   });
 
 export const analyzeSpec = createServerFn({ method: "POST" })
