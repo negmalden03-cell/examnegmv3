@@ -114,14 +114,14 @@ function TakeExam() {
               <p className="mt-3 whitespace-pre-wrap rounded-lg border border-border bg-secondary/50 p-4 leading-loose text-ink">{s.passage}</p>
             )}
             <ol className="mt-4 space-y-5">
-              {s.questions.map((q, i) => (
+              {s.questions.map((q: any, i: number) => (
                 <li key={q.id}>
                   <p className="leading-relaxed text-ink">
                     {toArabicDigits(i + 1)}. {q.text} <span className="text-xs text-muted-foreground">({toArabicDigits(q.marks)} درجة)</span>
                   </p>
                   {q.options ? (
                     <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                      {q.options.map((o) => (
+                      {q.options.map((o: string) => (
                         <label key={o} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${answers[q.id] === o ? "border-primary bg-accent" : "border-border bg-card"}`}>
                           <input type="radio" name={q.id} checked={answers[q.id] === o} onChange={() => set(q.id, o)} />
                           {o}
