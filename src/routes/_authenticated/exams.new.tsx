@@ -93,7 +93,7 @@ function NewExam() {
       const r = await gen({
         data: {
           grade, term,
-          branches: specResult?.branches.length ? specResult.branches.filter((b) => BRANCHES.includes(b)).concat(branches.filter((b) => !specResult.branches.includes(b))).filter(Boolean).length ? Array.from(new Set([...specResult.branches, ...branches])) : branches : branches,
+          branches,
           difficulty, totalMarks: specResult?.totalMarks ?? marks, duration: specResult?.duration ?? duration,
           notes, spec: specResult?.spec || undefined,
           sourceIds: sourceIds.length ? sourceIds : undefined,
@@ -212,7 +212,7 @@ function NewExam() {
               {busy === "spec" ? "جارٍ التحليل..." : "حلّل المواصفات بالذكاء الاصطناعي"}
             </Button>
             {specResult && (
-              <div data-x="1" className="rounded-lg border border-primary/30 bg-accent/50 p-4 text-sm">
+              <div className="rounded-lg border border-primary/30 bg-accent/50 p-4 text-sm">
                 <p className="font-semibold text-ink">ملخص الهيكل:</p>
                 <p className="mt-1 leading-relaxed text-ink">{specResult.summary}</p>
                 <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
