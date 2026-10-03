@@ -2,7 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const MODEL = "google/gemini-3-flash-preview";
 
 const SYSTEM = `أنت خبير في مناهج اللغة العربية للمرحلة الإعدادية في مصر (وزارة التربية والتعليم) وفي بناء الامتحانات وفق مواصفات الورقة الامتحانية الرسمية.
 اكتب بالعربية الفصحى السليمة مع ضبط الكلمات المهمة بالشكل عند الحاجة. التزم بمستوى الصف المطلوب.
