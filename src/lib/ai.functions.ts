@@ -2,36 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const MODEL = "google/gemini-3-flash-preview";
 
 const SYSTEM = `أنت خبير في مناهج اللغة العربية للمرحلة الإعدادية في مصر (وزارة التربية والتعليم) وفي بناء الامتحانات وفق مواصفات الورقة الامتحانية الرسمية.
 اكتب بالعربية الفصحى السليمة مع ضبط الكلمات المهمة بالشكل عند الحاجة. التزم بمستوى الصف المطلوب.
 أعد دائمًا JSON صالحًا فقط دون أي نص إضافي أو علامات markdown.`;
 
 async function callAI(prompt: string): Promise<any> {
-  const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("خدمة الذكاء الاصطناعي غير مهيأة");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: SYSTEM },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-    }),
-  });
-  if (res.status === 429) throw new Error("تم تجاوز حد الطلبات، حاول بعد قليل");
-  if (res.status === 402) throw new Error("نفد رصيد الذكاء الاصطناعي، يرجى إضافة رصيد");
-  if (!res.ok) throw new Error("تعذر الاتصال بخدمة الذكاء الاصطناعي");
-  const data = await res.json();
-  const text: string = data?.choices?.[0]?.message?.content ?? "";
-  const cleaned = text.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
-  const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}");
-  return JSON.parse(cleaned.slice(start, end + 1));
+  const { callResponsesJSON } = await import("./ai-responses.server");
+  return callResponsesJSON(SYSTEM, [{ type: "input_text", text: prompt }]);
 }
 
 const QUESTION_SHAPE = `كل سؤال: {"type": "mcq"|"tf"|"short"|"essay", "text": "نص السؤال", "options": ["..."] (للاختيار فقط، ٤ بدائل), "answer": "الإجابة النموذجية أو البديل الصحيح نصًا (للصواب والخطأ: صواب أو خطأ)", "marks": رقم}`;

@@ -100,7 +100,7 @@ function TakeExam() {
         </div>
       </header>
 
-      {exam.sections.map((s) => {
+      {exam.sections.map((s: any) => {
         const listening = s.branch === "الاستماع";
         return (
           <section key={s.id} className="surface-card mt-5 p-6">
