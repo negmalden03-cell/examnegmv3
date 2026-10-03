@@ -115,6 +115,42 @@ export type Database = {
           },
         ]
       }
+      saved_specs: {
+        Row: {
+          branches: string[]
+          created_at: string
+          duration: number | null
+          id: string
+          spec: string
+          summary: string
+          title: string
+          total_marks: number | null
+          user_id: string
+        }
+        Insert: {
+          branches?: string[]
+          created_at?: string
+          duration?: number | null
+          id?: string
+          spec: string
+          summary?: string
+          title: string
+          total_marks?: number | null
+          user_id?: string
+        }
+        Update: {
+          branches?: string[]
+          created_at?: string
+          duration?: number | null
+          id?: string
+          spec?: string
+          summary?: string
+          title?: string
+          total_marks?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       sources: {
         Row: {
           created_at: string
