@@ -151,6 +151,41 @@ export type Database = {
         }
         Relationships: []
       }
+      source_pages: {
+        Row: {
+          content: string
+          id: string
+          page_no: number
+          source_id: string
+          tsv: unknown
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          id?: string
+          page_no: number
+          source_id: string
+          tsv?: unknown
+          user_id?: string
+        }
+        Update: {
+          content?: string
+          id?: string
+          page_no?: number
+          source_id?: string
+          tsv?: unknown
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_pages_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sources: {
         Row: {
           created_at: string
@@ -160,8 +195,13 @@ export type Database = {
           grade: string
           id: string
           kind: string
+          lessons: string[]
           mime: string | null
+          page_count: number
+          parts: string[]
+          size_bytes: number
           status: string
+          subject: string
           term: string | null
           title: string
           user_id: string
@@ -174,8 +214,13 @@ export type Database = {
           grade: string
           id?: string
           kind?: string
+          lessons?: string[]
           mime?: string | null
+          page_count?: number
+          parts?: string[]
+          size_bytes?: number
           status?: string
+          subject?: string
           term?: string | null
           title: string
           user_id?: string
@@ -188,8 +233,13 @@ export type Database = {
           grade?: string
           id?: string
           kind?: string
+          lessons?: string[]
           mime?: string | null
+          page_count?: number
+          parts?: string[]
+          size_bytes?: number
           status?: string
+          subject?: string
           term?: string | null
           title?: string
           user_id?: string
