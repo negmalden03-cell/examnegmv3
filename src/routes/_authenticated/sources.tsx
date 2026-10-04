@@ -89,7 +89,7 @@ function SourcesPage() {
         .from("sources")
         .insert({
           title: title.trim() || file.name.replace(/\.[^.]+$/, ""),
-          grade, term, kind, subject: SUBJECTS[0],
+          grade, term, kind, subject: "اللغة العربية",
           file_path: parts[0]!, parts, size_bytes: file.size,
           file_name: file.name, mime: file.type || "application/octet-stream",
           status: "pending",
