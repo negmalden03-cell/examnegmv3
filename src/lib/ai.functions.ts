@@ -28,19 +28,40 @@ export const generateExam = createServerFn({ method: "POST" })
         notes: z.string().max(4000).optional(),
         spec: z.string().max(8000).optional(),
         sourceIds: z.array(z.string().uuid()).max(10).optional(),
+        lesson: z.string().max(300).optional(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     let refs = "";
     if (data.sourceIds?.length) {
-      const { data: srcs } = await context.supabase.from("sources").select("title,kind,extracted_text").in("id", data.sourceIds);
-      const per = Math.floor(60000 / Math.max(1, srcs?.length ?? 1));
-      refs = (srcs ?? [])
-        .filter((s) => s.extracted_text)
-        .map((s) => `--- مصدر: ${s.title} (${s.kind === "exam" ? "امتحان سابق" : s.kind === "book" ? "كتاب مدرسي" : "مصدر"}) ---\n${String(s.extracted_text).slice(0, per)}`)
-        .join("\n\n");
+      const { data: srcs } = await context.supabase.from("sources").select("id,title,kind,extracted_text").in("id", data.sourceIds);
+      const per = Math.floor(70000 / Math.max(1, srcs?.length ?? 1));
+      const words = (data.lesson ?? "").split(/[\s،,]+/).map((w) => w.replace(/^ال/, "")).filter((w) => w.length > 2);
+      const blocks: string[] = [];
+      for (const s of srcs ?? []) {
+        const { data: pages } = await context.supabase
+          .from("source_pages").select("page_no,content").eq("source_id", s.id).order("page_no").limit(2000);
+        let text = "";
+        if (pages?.length) {
+          let picked = pages;
+          if (words.length) {
+            // البحث في كل أجزاء المصدر عن صفحات الدرس + الصفحة التالية لكل تطابق
+            const hit = new Set<number>();
+            pages.forEach((p, i) => { if (words.some((w) => p.content.includes(w))) { hit.add(i); hit.add(i + 1); } });
+            const sel = pages.filter((_, i) => hit.has(i));
+            if (sel.length) picked = sel;
+          }
+          for (const p of picked) {
+            if (text.length > per) break;
+            text += `[صفحة ${p.page_no}]\n${p.content}\n`;
+          }
+        } else text = String(s.extracted_text ?? "").slice(0, per);
+        if (text.trim()) blocks.push(`--- مصدر: ${s.title} (${s.kind === "exam" ? "امتحان سابق" : s.kind === "book" ? "كتاب مدرسي" : "مصدر"}) ---\n${text.slice(0, per)}`);
+      }
+      refs = blocks.join("\n\n");
     }
+    if (data.lesson) data.notes = `الدرس المطلوب: ${data.lesson}\n${data.notes ?? ""}`;
     const { callResponsesJSON } = await import("./ai-responses.server");
     const out = await callResponsesJSON(SYSTEM, [{ type: "input_text", text: `أنشئ امتحانًا كاملًا في اللغة العربية.
 الصف: ${data.grade} — ${data.term}
@@ -191,7 +212,7 @@ export const readImagesText = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { callResponsesJSON } = await import("./ai-responses.server");
     const out = await callResponsesJSON(SYSTEM, [
-      { type: "input_text", text: `هذه صفحات مصوّرة من كتاب أو امتحان للغة العربية. انسخ نصها العربي كاملًا بدقة وبالترتيب (القطع، الأبيات، القواعد، الأسئلة والدرجات). أعد: {"text": "النص"}` },
+      { type: "input_text", text: `هذه ${data.images.length} صفحات مصوّرة من كتاب أو امتحان للغة العربية. انسخ نصها العربي كاملًا بدقة وبالترتيب (القطع، الأبيات، القواعد، الأسئلة والدرجات، عناوين الدروس). ابدأ نص كل صورة بالعلامة [صفحة N] حيث N رقم الصورة بالترتيب من 1. أعد: {"text": "النص"}` },
       ...data.images.map((im) => ({ type: "input_image" as const, image_url: `data:${im.mime};base64,${im.base64}` })),
     ]);
     return { text: String(out.text ?? "") };

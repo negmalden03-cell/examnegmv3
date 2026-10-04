@@ -63,13 +63,43 @@ function NewExam() {
 
   // المصادر
   const [sourceIds, setSourceIds] = useState<string[]>([]);
+  const [lesson, setLesson] = useState("");
   const { data: sources = [] } = useQuery({
     queryKey: ["sources", grade],
     queryFn: async () => {
-      const { data } = await supabase.from("sources").select("id,title,kind,status").eq("grade", grade).eq("status", "ready");
+      const { data } = await supabase.from("sources").select("id,title,kind,status,lessons").eq("grade", grade).eq("status", "ready");
       return data ?? [];
     },
   });
+  const lessonOptions = Array.from(new Set(sources.filter((s: any) => sourceIds.includes(s.id)).flatMap((s: any) => s.lessons ?? []))) as string[];
+
+  // المواصفات المحفوظة
+  const { data: savedSpecs = [], refetch: refetchSpecs } = useQuery({
+    queryKey: ["saved_specs"],
+    queryFn: async () => (await supabase.from("saved_specs").select("*").order("created_at", { ascending: false })).data ?? [],
+  });
+  async function saveSpec() {
+    if (!specResult) return;
+    const t = prompt("اسم المواصفات المحفوظة:", `مواصفات ${grade} — ${term}`);
+    if (!t) return;
+    const { error } = await supabase.from("saved_specs").insert({ title: t, summary: specResult.summary, spec: specResult.spec, total_marks: specResult.totalMarks, duration: specResult.duration, branches: specResult.branches });
+    if (error) { toast.error("تعذر الحفظ"); return; }
+    toast.success("حُفظت المواصفات، ستجدها جاهزة كل مرة");
+    refetchSpecs();
+  }
+  function useSpec(s: any) {
+    const r: SpecResult = { summary: s.summary, spec: s.spec, totalMarks: s.total_marks, duration: s.duration, branches: s.branches ?? [] };
+    setSpecResult(r);
+    if (r.totalMarks) setMarks(r.totalMarks);
+    if (r.duration) setDuration(r.duration);
+    if (r.branches.length) setBranches(r.branches);
+  }
+  async function deleteSpec(id: string) {
+    if (!confirm("حذف هذه المواصفات؟")) return;
+    await supabase.from("saved_specs").delete().eq("id", id);
+    if (specResult && savedSpecs.find((s: any) => s.id === id)?.spec === specResult.spec) setSpecResult(null);
+    refetchSpecs();
+  }
 
   const toggle = (b: string) => setBranches((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]));
   const toggleSource = (id: string) => setSourceIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
@@ -97,6 +127,7 @@ function NewExam() {
           difficulty, totalMarks: specResult?.totalMarks ?? marks, duration: specResult?.duration ?? duration,
           notes, spec: specResult?.spec || undefined,
           sourceIds: sourceIds.length ? sourceIds : undefined,
+          lesson: lesson.trim() || undefined,
         },
       });
       await save(r.title, r.sections);
