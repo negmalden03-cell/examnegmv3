@@ -251,6 +251,21 @@ function NewExam() {
                   {specResult.duration && <span>الزمن: {specResult.duration} دقيقة</span>}
                   {specResult.branches.length > 0 && <span>الفروع: {specResult.branches.join("، ")}</span>}
                 </div>
+                <Button size="sm" variant="outline" className="mt-3" onClick={saveSpec}>احفظ المواصفات لاستخدامها لاحقًا</Button>
+              </div>
+            )}
+            {savedSpecs.length > 0 && (
+              <div className="space-y-2">
+                <Label>مواصفات محفوظة</Label>
+                {savedSpecs.map((s: any) => (
+                  <div key={s.id} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm">
+                    <span className="text-ink">{s.title}</span>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => useSpec(s)}>استخدم</Button>
+                      <Button size="sm" variant="ghost" onClick={() => deleteSpec(s.id)}>حذف</Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -313,6 +328,22 @@ function NewExam() {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {lessonOptions.length > 0 && (
+          <div className="space-y-1.5">
+            <Label>الدرس (يبحث الذكاء الاصطناعي في كل أجزاء المصدر)</Label>
+            <select className={selectCls} value={lesson} onChange={(e) => setLesson(e.target.value)}>
+              <option value="">كل الدروس</option>
+              {lessonOptions.map((l) => <option key={l}>{l}</option>)}
+            </select>
+          </div>
+        )}
+        {sourceIds.length > 0 && lessonOptions.length === 0 && (
+          <div className="space-y-1.5">
+            <Label>اسم الدرس (اختياري)</Label>
+            <Input value={lesson} onChange={(e) => setLesson(e.target.value)} placeholder="مثال: المبني للمجهول" />
           </div>
         )}
 

@@ -251,3 +251,18 @@ ${data.text ? `نص المواصفات من المعلم:\n${data.text}` : ""}
       branches: Array.isArray(out.branches) ? out.branches.map(String) : [],
     };
   });
+
+export const extractLessons = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase;
+    const { data: pages } = await sb.from("source_pages").select("page_no,content").eq("source_id", data.id).order("page_no").limit(2000);
+    let text = "";
+    for (const p of pages ?? []) { if (text.length > 80000) break; text += `[صفحة ${p.page_no}] ${p.content.slice(0, 400)}\n`; }
+    if (!text.trim()) return { lessons: [] as string[] };
+    const out = await callAI(`هذه مقتطفات من صفحات مصدر للغة العربية. استخرج قائمة عناوين الدروس/الموضوعات بالترتيب (بحد أقصى ٨٠).\n${text}\nأعد: {"lessons": ["..."]}`);
+    const lessons = (Array.isArray(out.lessons) ? out.lessons.map(String) : []).slice(0, 80);
+    await sb.from("sources").update({ lessons }).eq("id", data.id);
+    return { lessons };
+  });
