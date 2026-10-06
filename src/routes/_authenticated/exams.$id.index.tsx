@@ -6,6 +6,7 @@ import { Share2, Copy, Loader2, Plus, Printer, Save, Trash2, Wand2, ClipboardChe
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateQuestions } from "@/lib/ai.functions";
+import { ExamChat } from "@/components/ExamChat";
 import {
   BRANCHES,
   TYPE_LABELS,
@@ -200,6 +201,9 @@ function ExamPage() {
               المجموع: {toArabicDigits(total)} درجة
             </div>
           </div>
+
+          <ExamChat grade={exam.grade} title={title} sections={sections} onApply={(t, s) => { setTitle(t); setSections(s); setDirty(true); }} />
+
 
           {sections.map((s, si) => (
             <SectionEditor
