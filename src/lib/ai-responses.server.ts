@@ -45,7 +45,7 @@ export async function callResponsesJSON(system: string, parts: ContentPart[]): P
       );
       if (res.status !== 429 && res.status < 500 && res.status !== 404) break;
       console.error("Gemini retry", model, res.status, (await res.clone().text().catch(() => "")).slice(0, 300));
-      if (res.status === 429 || (hit429 && !res.ok)) hit429 = true;
+      if (res.status === 429) hit429 = true;
       if (res.status === 404) break;
       if (attempt === 0) await new Promise((r) => setTimeout(r, 2000 + Math.random() * 1000));
     }
