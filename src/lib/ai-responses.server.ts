@@ -47,7 +47,7 @@ export async function callResponsesJSON(system: string, parts: ContentPart[]): P
       if (res.status === 404) break;
       if (attempt === 0) await new Promise((r) => setTimeout(r, 2000 + Math.random() * 1000));
     }
-    if (res.ok || (res.status !== 429 && res.status < 500 && res.status !== 404)) break;
+    if (res && (res.ok || (res.status !== 429 && res.status < 500 && res.status !== 404))) break;
   }
   if (!res) throw new Error("تعذر الاتصال بخدمة الذكاء الاصطناعي");
   if (res.status === 429)
