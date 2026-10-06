@@ -25,7 +25,7 @@ function parseJson(text: string): any {
 }
 
 // نماذج بديلة لكل منها حد طلبات مستقل في Google — نجرّبها بالترتيب عند تجاوز الحد
-const MODELS = [MODEL, "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"];
+const MODELS = [MODEL, "gemini-3.8-flash", "gemini-3.5-flash-lite"];
 
 export async function callResponsesJSON(system: string, parts: ContentPart[]): Promise<any> {
   const key = process.env["GEMINI_API_KEY"];
@@ -36,6 +36,7 @@ export async function callResponsesJSON(system: string, parts: ContentPart[]): P
     generationConfig: { responseMimeType: "application/json" },
   });
   let res: Response | null = null;
+  let hit429 = false;
   for (const model of MODELS) {
     for (let attempt = 0; attempt < 2; attempt++) {
       res = await fetch(
@@ -44,13 +45,14 @@ export async function callResponsesJSON(system: string, parts: ContentPart[]): P
       );
       if (res.status !== 429 && res.status < 500 && res.status !== 404) break;
       console.error("Gemini retry", model, res.status, (await res.clone().text().catch(() => "")).slice(0, 300));
+      if (res.status === 429) hit429 = true;
       if (res.status === 404) break;
       if (attempt === 0) await new Promise((r) => setTimeout(r, 2000 + Math.random() * 1000));
     }
     if (res && (res.ok || (res.status !== 429 && res.status < 500 && res.status !== 404))) break;
   }
   if (!res) throw new Error("تعذر الاتصال بخدمة الذكاء الاصطناعي");
-  if (res.status === 429)
+  if (res.status === 429 || (hit429 && !res.ok))
     throw new Error("انتهى الحد المجاني اليومي لمفتاح Gemini. انتظر حتى الغد أو فعّل الفوترة في Google AI Studio");
   if (res.status === 400 || res.status === 403) {
     console.error("Gemini error", res.status, await res.text().catch(() => ""));
