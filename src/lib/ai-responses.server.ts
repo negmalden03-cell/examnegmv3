@@ -24,22 +24,34 @@ function parseJson(text: string): any {
   return JSON.parse(cleaned.slice(s, e + 1));
 }
 
+// نماذج بديلة لكل منها حد طلبات مستقل في Google — نجرّبها بالترتيب عند تجاوز الحد
+const MODELS = [MODEL, "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"];
+
 export async function callResponsesJSON(system: string, parts: ContentPart[]): Promise<any> {
   const key = process.env["GEMINI_API_KEY"];
   if (!key) throw new Error("مفتاح الذكاء الاصطناعي غير مهيأ");
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: system }] },
-        contents: [{ role: "user", parts: parts.map(toGeminiPart) }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.4 },
-      }),
-    },
-  );
-  if (res.status === 429) throw new Error("تم تجاوز حد الطلبات، حاول بعد قليل");
+  const body = JSON.stringify({
+    system_instruction: { parts: [{ text: system }] },
+    contents: [{ role: "user", parts: parts.map(toGeminiPart) }],
+    generationConfig: { responseMimeType: "application/json" },
+  });
+  let res: Response | null = null;
+  for (const model of MODELS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body },
+      );
+      if (res.status !== 429 && res.status < 500 && res.status !== 404) break;
+      console.error("Gemini retry", model, res.status, (await res.clone().text().catch(() => "")).slice(0, 300));
+      if (res.status === 404) break;
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 2000 + Math.random() * 1000));
+    }
+    if (res.ok || (res.status !== 429 && res.status < 500 && res.status !== 404)) break;
+  }
+  if (!res) throw new Error("تعذر الاتصال بخدمة الذكاء الاصطناعي");
+  if (res.status === 429)
+    throw new Error("انتهى الحد المجاني اليومي لمفتاح Gemini. انتظر حتى الغد أو فعّل الفوترة في Google AI Studio");
   if (res.status === 400 || res.status === 403) {
     console.error("Gemini error", res.status, await res.text().catch(() => ""));
     throw new Error("مفتاح الذكاء الاصطناعي غير صالح أو الخدمة غير مفعّلة له");
