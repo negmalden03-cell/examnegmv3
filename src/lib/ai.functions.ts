@@ -266,3 +266,33 @@ export const extractLessons = createServerFn({ method: "POST" })
     await sb.from("sources").update({ lessons }).eq("id", data.id);
     return { lessons };
   });
+
+export const editExamChat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        grade: z.string(),
+        title: z.string(),
+        sections: z.any(),
+        instruction: z.string().min(1).max(3000),
+        history: z.array(z.object({ role: z.enum(["user", "ai"]), text: z.string().max(3000) })).max(20).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const hist = (data.history ?? []).map((m) => `${m.role === "user" ? "المعلم" : "المساعد"}: ${m.text}`).join("\n");
+    const out = await callAI(`أنت مساعد يعدّل امتحان لغة عربية لطلاب ${data.grade} بناءً على طلب المعلم.
+الامتحان الحالي (JSON):
+${JSON.stringify({ title: data.title, sections: data.sections }).slice(0, 60000)}
+${hist ? `المحادثة السابقة:\n${hist}` : ""}
+طلب المعلم الآن: ${data.instruction}
+نفّذ التعديل المطلوب فقط وأبقِ بقية الامتحان كما هو تمامًا (احتفظ بقيم id الموجودة). إن كان الطلب سؤالًا لا يحتاج تعديلًا فأعد الامتحان كما هو.
+أعد: {"reply": "رد قصير للمعلم يوضح ما عدّلته", "title": "العنوان", "sections": [نفس البنية]}
+${QUESTION_SHAPE}`);
+    return {
+      reply: String(out.reply ?? "تم التعديل"),
+      title: String(out.title ?? data.title),
+      sections: Array.isArray(out.sections) ? out.sections : data.sections,
+    };
+  });
